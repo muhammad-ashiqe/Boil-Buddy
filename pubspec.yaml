@@ -1,0 +1,75 @@
+name: boil_buddy
+description: "Boil Buddy: Perfect Egg Timer — A gamified, offline-first egg boiling timer."
+publish_to: "none"
+
+version: 1.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Local storage
+  hive_flutter: ^1.1.0
+
+  # Ads
+
+  # In-App Purchases (RevenueCat)
+
+  # Background notifications / alarm
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+
+  # Screen wakelock
+  wakelock_plus: ^1.1.4
+
+  # Audio
+  audioplayers: ^6.0.0
+
+  # Haptic / vibration
+  vibration: ^2.0.0
+
+  # Rive character animation
+  rive: ^0.13.12
+
+  # Confetti reward effect
+  confetti: ^0.7.0
+
+  # Permission handling
+  permission_handler: ^11.3.1
+
+  # Fonts
+  google_fonts: ^6.2.1
+
+  # Utilities
+  shared_preferences: ^2.2.3
+  image: ^4.8.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.9
+  riverpod_generator: 2.4.0
+  hive_generator: ^2.0.1
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/audio/
+    - assets/data/
+    - assets/rive/
+    - assets/images/
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/images/nano_banana.png"

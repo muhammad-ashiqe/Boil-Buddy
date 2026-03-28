@@ -1,0 +1,415 @@
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../providers/timer_provider.dart';
+import 'reactive_egg.dart';
+import 'egg_dialogue.dart';
+
+class EggAnimationWidget extends ConsumerStatefulWidget {
+  const EggAnimationWidget({super.key});
+
+  @override
+  ConsumerState<EggAnimationWidget> createState() => _EggAnimationWidgetState();
+}
+
+class _EggAnimationWidgetState extends ConsumerState<EggAnimationWidget>
+    with TickerProviderStateMixin {
+  late AnimationController _bubbleController;
+  late Animation<double> _bubbleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _bubbleController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat();
+    _bubbleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(_bubbleController);
+  }
+
+  @override
+  void dispose() {
+    _bubbleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final animState = ref.watch(animationStateProvider);
+    final progress = ref.watch(progressProvider);
+
+    final bubbleMs = (900 - (progress * 600)).clamp(300, 900).toInt();
+    if (_bubbleController.duration?.inMilliseconds != bubbleMs) {
+      _bubbleController.duration = Duration(milliseconds: bubbleMs);
+      if (_bubbleController.isAnimating) _bubbleController.repeat();
+    }
+
+    return AnimatedBuilder(
+      animation: _bubbleAnim,
+      builder: (context, _) {
+        final double h = 340;
+        final double potTop = h * 0.40;
+        final double potBottom = h * 0.90;
+        final double potH = potBottom - potTop;
+        final double waterRatio = 0.72 + progress * 0.15; // Increased base level
+        final double waterY = potBottom - (potH * waterRatio);
+
+        return SizedBox(
+          width: 300,
+          height: 340,
+          child: Stack(
+            children: [
+              // 1. Back Pot & Water
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _PotBackPainter(
+                    animState: animState,
+                    progress: progress,
+                  ),
+                ),
+              ),
+              
+              // 2. The Reactive Egg
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 340 - waterY - 30, // Keep it floating higher, showing face
+                child: Center(
+                  child: ReactiveEgg(
+                    boilingIntensity: progress,
+                  ),
+                ),
+              ),
+
+              // 3. Front Pot, Water Surface, Bubbles, Steam
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _PotFrontPainter(
+                    animState: animState,
+                    progress: progress,
+                    bubbleT: _bubbleAnim.value,
+                  ),
+                ),
+              ),
+              
+              // 4. Egg Dialogue
+              const Positioned(
+                top: 40,
+                right: 20,
+                child: EggDialogueWidget(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+Color _getWaterColor(AnimationState animState) {
+  switch (animState) {
+    case AnimationState.chilling: return const Color(0xFF81D4FA);
+    case AnimationState.warming: return const Color(0xFF4FC3F7);
+    case AnimationState.boiling:
+    case AnimationState.panic: return const Color(0xFF29B6F6);
+    case AnimationState.celebrate: return const Color(0xFF29B6F6);
+  }
+}
+
+double _bowlWidthAt(double y, double top, double bottom, double topW, double bottomW) {
+  if (y <= top) return topW;
+  if (y >= bottom) return bottomW;
+  final t = (y - top) / (bottom - top);
+  return bottomW + (topW - bottomW) * sqrt(1.0 - t * t);
+}
+
+Path _getBowlSilhouette(double cx, double top, double bottom, double topW, double bottomW, {bool close = true}) {
+  final path = Path();
+  path.moveTo(cx - topW / 2, top);
+  
+  final int steps = 30;
+  for (int i = 1; i <= steps; i++) {
+    final t = i / steps;
+    final y = top + (bottom - top) * t;
+    final tSq = t * t;
+    final w = bottomW + (topW - bottomW) * sqrt(1.0 - tSq.clamp(0.0, 1.0));
+    path.lineTo(cx - w / 2, y);
+  }
+  
+  // Front bottom arc
+  final bottomRect = Rect.fromCenter(center: Offset(cx, bottom), width: bottomW, height: bottomW * 0.25);
+  path.arcTo(bottomRect, pi, -pi, false);
+  
+  for (int i = steps - 1; i >= 0; i--) {
+    final t = i / steps;
+    final y = top + (bottom - top) * t;
+    final tSq = t * t;
+    final w = bottomW + (topW - bottomW) * sqrt(1.0 - tSq.clamp(0.0, 1.0));
+    path.lineTo(cx + w / 2, y);
+  }
+  if (close) path.close();
+  return path;
+}
+
+Path _getWaterBodyPath(double cx, double waterY, double potBottom, double potTop, double potW, double bottomW, {required bool isFront}) {
+  final path = Path();
+  final waterW = _bowlWidthAt(waterY, potTop, potBottom, potW, bottomW);
+  final int steps = 20;
+
+  path.moveTo(cx - waterW / 2, waterY);
+  // Left wall
+  for (int i = 1; i <= steps; i++) {
+    final t = i / steps;
+    final y = waterY + (potBottom - waterY) * t;
+    final w = _bowlWidthAt(y, potTop, potBottom, potW, bottomW);
+    path.lineTo(cx - w / 2, y);
+  }
+  // Bottom arc
+  final bottomRect = Rect.fromCenter(center: Offset(cx, potBottom), width: bottomW, height: bottomW * 0.25);
+  path.arcTo(bottomRect, pi, -pi, false);
+  // Right wall
+  for (int i = steps - 1; i >= 0; i--) {
+    final t = i / steps;
+    final y = waterY + (potBottom - waterY) * t;
+    final w = _bowlWidthAt(y, potTop, potBottom, potW, bottomW);
+    path.lineTo(cx + w / 2, y);
+  }
+  // Connect right to left via the elliptical surface
+  final Rect surfaceRect = Rect.fromCenter(center: Offset(cx, waterY), width: waterW, height: waterW * 0.25);
+  path.arcTo(surfaceRect, 0, isFront ? pi : -pi, false);
+  return path;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// POT BACK PAINTER
+// ═══════════════════════════════════════════════════════════════════════════
+class _PotBackPainter extends CustomPainter {
+  final AnimationState animState;
+  final double progress;
+
+  _PotBackPainter({
+    required this.animState,
+    required this.progress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    final potTop = h * 0.40;
+    final potBottom = h * 0.90;
+    final potH = potBottom - potTop;
+    final potW = w * 0.90;
+    final bottomW = potW * 0.55;
+
+    final potMouthRect = Rect.fromCenter(
+        center: Offset(cx, potTop), width: potW, height: potW * 0.25);
+
+    final waterRatio = 0.72 + progress * 0.15;
+    final waterY = potBottom - (potH * waterRatio);
+
+    // Back rim stroke (glass bowl opening back)
+    canvas.drawArc(
+        potMouthRect, pi, pi, false, Paint()..color = const Color(0xFF91CDE4).withOpacity(0.5)..style = PaintingStyle.stroke..strokeWidth = 3);
+        
+    // Base rim stroke (back of base)
+    final bottomRect = Rect.fromCenter(center: Offset(cx, potBottom), width: bottomW, height: bottomW * 0.25);
+    canvas.drawArc(
+        bottomRect, pi, pi, false, Paint()..color = const Color(0xFF91CDE4).withOpacity(0.3)..style = PaintingStyle.stroke..strokeWidth = 2);
+
+    final waterW = _bowlWidthAt(waterY, potTop, potBottom, potW, bottomW);
+    final waterEllipseRect = Rect.fromCenter(
+        center: Offset(cx, waterY), width: waterW, height: waterW * 0.25);
+
+    // Draw Back Water Volume
+    final backWaterPath = _getWaterBodyPath(cx, waterY, potBottom, potTop, potW, bottomW, isFront: false);
+    canvas.drawPath(
+      backWaterPath,
+      Paint()..color = _getWaterColor(animState).withOpacity(0.55),
+    );
+    
+    // Draw the full surface base ellipse (lighter)
+    canvas.drawOval(
+      waterEllipseRect,
+      Paint()..color = _getWaterColor(animState).withOpacity(0.3),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PotBackPainter o) =>
+      o.animState != animState || o.progress != progress;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// POT FRONT PAINTER
+// ═══════════════════════════════════════════════════════════════════════════
+class _PotFrontPainter extends CustomPainter {
+  final AnimationState animState;
+  final double progress;
+  final double bubbleT;
+
+  _PotFrontPainter({
+    required this.animState,
+    required this.progress,
+    required this.bubbleT,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    final potTop = h * 0.40;
+    final potBottom = h * 0.90;
+    final potH = potBottom - potTop;
+    final potW = w * 0.90; 
+    final bottomW = potW * 0.55;
+
+    final waterRatio = 0.72 + progress * 0.15;
+    final waterY = potBottom - (potH * waterRatio);
+    final potMouthRect = Rect.fromCenter(center: Offset(cx, potTop), width: potW, height: potW * 0.25);
+
+    // 1. Water Front Volume
+    final frontWaterPath = _getWaterBodyPath(cx, waterY, potBottom, potTop, potW, bottomW, isFront: true);
+    canvas.drawPath(frontWaterPath, Paint()..color = _getWaterColor(animState).withOpacity(0.5));
+
+    // Bubbles
+    _drawBubbles(canvas, cx, waterY, potBottom, potW, bottomW, potTop, potBottom);
+
+    // 2. Bowl Glass Front
+    final bowlShape = _getBowlSilhouette(cx, potTop, potBottom, potW, bottomW, close: true);
+    final bowlStroke = _getBowlSilhouette(cx, potTop, potBottom, potW, bottomW, close: false);
+    
+    // Glass body tint
+    canvas.drawPath(bowlShape, Paint()..color = const Color(0xFFAFE1FA).withOpacity(0.15));
+
+    // Reflections
+    canvas.save();
+    canvas.clipPath(bowlShape);
+    
+    // Thick white streaks simulating light reflecting off the rounded glass
+    final streakPaint = Paint()..color = Colors.white.withOpacity(0.35)..style = PaintingStyle.stroke..strokeWidth = 15..strokeCap = StrokeCap.round..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+    
+    final streakPath = Path();
+    for(int i = 2; i < 25; i++) {
+        final t = i / 30;
+        final y = potTop + potH * t;
+        final bw = _bowlWidthAt(y, potTop, potBottom, potW, bottomW);
+        if (i == 2) {
+            streakPath.moveTo(cx - bw/2 + 35, y);
+        } else {
+            streakPath.lineTo(cx - bw/2 + 35, y);
+        }
+    }
+    canvas.drawPath(streakPath, streakPaint);
+
+    final streakPaintThin = Paint()..color = Colors.white.withOpacity(0.2)..style = PaintingStyle.stroke..strokeWidth = 6..strokeCap = StrokeCap.round;
+    final streakPathThin = Path();
+    for(int i = 5; i < 20; i++) {
+        final t = i / 30;
+        final y = potTop + potH * t;
+        final bw = _bowlWidthAt(y, potTop, potBottom, potW, bottomW);
+        if (i == 5) {
+            streakPathThin.moveTo(cx + bw/2 - 25, y);
+        } else {
+            streakPathThin.lineTo(cx + bw/2 - 25, y);
+        }
+    }
+    canvas.drawPath(streakPathThin, streakPaintThin);
+
+    canvas.restore();
+
+    // 3. Pot outlines
+    canvas.drawPath(
+      bowlStroke,
+      Paint()
+        ..color = const Color(0xFF91CDE4).withOpacity(0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    // Front mouth rim
+    canvas.drawArc(
+      potMouthRect,
+      0,
+      pi,
+      false,
+      Paint()
+        ..color = const Color(0xFFCDEEFE).withOpacity(0.9)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6,
+    );
+    canvas.drawArc(
+      potMouthRect,
+      0,
+      pi,
+      false,
+      Paint()
+        ..color = Colors.white.withOpacity(0.9)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    
+    // Front base rim
+    final bottomRect = Rect.fromCenter(center: Offset(cx, potBottom), width: bottomW, height: bottomW * 0.25);
+    canvas.drawArc(
+      bottomRect,
+      0,
+      pi,
+      false,
+      Paint()
+        ..color = const Color(0xFF91CDE4).withOpacity(0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4,
+    );
+  }
+
+  void _drawBubbles(Canvas canvas, double cx, double topY, double b, double topW, double bottomW, double potTop, double potBottom) {
+    if (progress <= 0) return;
+    final rng = Random(42);
+    final count = (progress * 25).ceil();
+    
+    for (int i = 0; i < count; i++) {
+      final delay = rng.nextDouble();
+      final t = ((bubbleT + delay) % 1.0);
+      
+      final by = b - 15 - t * (b - topY - 15);
+      final maxWidth = _bowlWidthAt(by, potTop, potBottom, topW, bottomW);
+      final rx = (rng.nextDouble() * 2 - 1);
+      final bx = cx + rx * (maxWidth / 2 - 15);
+      
+      final br = 4.0 + rng.nextDouble() * 8.0;
+      final op = (0.8 * (1 - t)).clamp(0.0, 1.0);
+      
+      canvas.drawCircle(Offset(bx, by), br, Paint()..color = const Color(0xFF81D4FA).withOpacity(op * 0.7));
+      canvas.drawCircle(Offset(bx, by), br, Paint()..color = Colors.white.withOpacity(op)..style = PaintingStyle.stroke..strokeWidth = 2.0);
+      canvas.drawCircle(Offset(bx - br * 0.3, by - br * 0.3), br * 0.2, Paint()..color = Colors.white.withOpacity(op));
+
+      if (animState == AnimationState.boiling || animState == AnimationState.panic) {
+         if (i % 3 == 0) {
+           final steamY = topY - (t * 60) - 10;
+           final steamX = bx + sin(t * pi * 4) * 15;
+           final steamOp = (1 - t) * 0.5;
+           
+           final steamPath = Path()
+             ..moveTo(steamX, steamY)
+             ..quadraticBezierTo(steamX - 15, steamY - 15, steamX + 5, steamY - 25)
+             ..quadraticBezierTo(steamX + 15, steamY - 35, steamX, steamY - 50);
+             
+           canvas.drawPath(steamPath, Paint()..color = Colors.white.withOpacity(steamOp.clamp(0.0, 1.0))..style = PaintingStyle.stroke..strokeWidth = 6..strokeCap = StrokeCap.round..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+         }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PotFrontPainter o) =>
+      o.animState != animState ||
+      o.progress != progress ||
+      o.bubbleT != bubbleT;
+}

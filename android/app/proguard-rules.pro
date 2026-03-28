@@ -1,0 +1,6 @@
+-keep class io.flutter.** { *; }
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.revenuecat.purchases.** { *; }
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-dontwarn io.flutter.**
+-dontwarn com.google.android.gms.**
