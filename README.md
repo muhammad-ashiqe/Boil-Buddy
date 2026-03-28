@@ -2,7 +2,7 @@
 
 **Internal Codename:** Boil Buddy  
 **Platform:** Android (Google Play Store)  
-**Stack:** Flutter 3.x · Dart · Riverpod · Hive · AdMob · RevenueCat
+**Stack:** Flutter 3.x · Dart · Riverpod · Hive
 
 ---
 
@@ -30,24 +30,6 @@ flutter build apk --debug
 ```
 
 ---
-
-## ⚠️ Before Play Store Release
-
-You must replace the following placeholder values:
-
-| Item | File | What to do |
-|------|------|------------|
-| AdMob App ID | `android/app/src/main/AndroidManifest.xml` | Replace test `ca-app-pub-…` ID |
-| AdMob Banner unit | `lib/services/ad_service.dart` | Replace `_testBannerAdUnitId` |
-| AdMob Rewarded unit | `lib/services/ad_service.dart` | Replace `_testRewardedAdUnitId` |
-| RevenueCat API key | `lib/services/iap_service.dart` | Replace `YOUR_REVENUECAT_ANDROID_API_KEY` |
-| Boiling ASMR audio | `assets/audio/boiling.mp3` | Replace with real looping audio |
-| Alarm sound | `assets/audio/alarm.mp3` | Replace with real alarm audio |
-| Rive animation | `assets/rive/egg_character.riv` | Replace with real .riv from designer |
-| App icon | `android/app/src/main/res/mipmap-*/` | Replace ic_launcher with real icon |
-
----
-
 ## Project Structure
 
 ```
@@ -93,12 +75,6 @@ assets/
 | Large  | 6:30  | 9:00   | 11:00 |
 
 **Room temp:** subtract 45 seconds from the above.
-
----
-
-## Developer Backdoor
-
-In **debug builds only**, tap the app version label in Settings **7 times** to enable Pro mode without a real purchase. A snackbar will confirm "🔧 Developer Mode Unlocked".
 
 ---
 
