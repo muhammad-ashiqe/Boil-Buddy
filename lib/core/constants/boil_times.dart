@@ -22,6 +22,10 @@ const Map<String, Duration> _kBoilTimesFridge = {
 /// Returns boil duration for the given egg configuration.
 /// Room temp eggs subtract 45 seconds from the fridge base time.
 Duration getBoilDuration(EggConfig config) {
+  if (config.customTime != null) {
+    return config.customTime!;
+  }
+
   final key = '${config.size.name}_${config.style.name}';
   final base = _kBoilTimesFridge[key] ?? const Duration(minutes: 8); // safe fallback
 
