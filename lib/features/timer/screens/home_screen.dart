@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_strings.dart';
 import '../providers/timer_provider.dart';
-import '../providers/settings_provider.dart';
 import '../widgets/egg_animation.dart';
 import '../widgets/egg_selector.dart';
 import '../widgets/timer_display.dart';
 import '../widgets/start_stop_button.dart';
 import '../../reward/screens/reward_modal.dart';
 import '../../settings/screens/settings_screen.dart';
+import '../../theme/screens/theme_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -24,7 +24,7 @@ class HomeScreen extends ConsumerWidget {
     final progress = ref.watch(progressProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.softWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -34,6 +34,11 @@ class HomeScreen extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                     builder: (_) => const SettingsScreen()),
+              ),
+              onTheme: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const ThemeScreen()),
               ),
             ),
             // ── Egg & Timer ──────────────────────────
@@ -100,8 +105,9 @@ class HomeScreen extends ConsumerWidget {
 
 class _TopBar extends StatelessWidget {
   final VoidCallback onSettings;
+  final VoidCallback onTheme;
 
-  const _TopBar({required this.onSettings});
+  const _TopBar({required this.onSettings, required this.onTheme});
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +127,7 @@ class _TopBar extends StatelessWidget {
               Text(
                 AppStrings.appName,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppTheme.deepBlue,
+                      color: Theme.of(context).colorScheme.primary,
                       fontSize: 20,
                     ),
               ),
@@ -134,7 +140,12 @@ class _TopBar extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(width: 44),
+          _TopBarButton(
+            icon: Icons.format_paint_rounded,
+            iconSize: 30,
+            onTap: onTheme,
+            tooltip: 'Theme',
+          ),
         ],
       ),
     );
@@ -145,11 +156,13 @@ class _TopBarButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final String tooltip;
+  final double iconSize;
 
   const _TopBarButton({
     required this.icon,
     required this.onTap,
     required this.tooltip,
+    this.iconSize = 24,
   });
 
   @override
@@ -157,7 +170,7 @@ class _TopBarButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.08),
@@ -170,7 +183,8 @@ class _TopBarButton extends StatelessWidget {
           },
           child: Padding(
             padding: const EdgeInsets.all(10),
-            child: Icon(icon, size: 24, color: AppTheme.deepBlue),
+            child: Icon(icon, size: iconSize,
+                color: Theme.of(context).colorScheme.primary),
           ),
         ),
       ),
