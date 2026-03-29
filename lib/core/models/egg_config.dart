@@ -12,12 +12,14 @@ class EggConfig {
   final EggTemp temp;
   final EggStyle style;
   final Duration? customTime;
+  final int eggCount;
 
   const EggConfig({
     required this.size,
     required this.temp,
     required this.style,
     this.customTime,
+    this.eggCount = 1,
   });
 
   @override
@@ -28,16 +30,18 @@ class EggConfig {
           size == other.size &&
           temp == other.temp &&
           style == other.style &&
-          customTime == other.customTime;
+          customTime == other.customTime &&
+          eggCount == other.eggCount;
 
   @override
-  int get hashCode => Object.hash(size, temp, style, customTime);
+  int get hashCode => Object.hash(size, temp, style, customTime, eggCount);
 
   EggConfig copyWith({
     EggSize? size,
     EggTemp? temp,
     EggStyle? style,
     Duration? customTime,
+    int? eggCount,
     bool clearCustomTime = false,
   }) {
     return EggConfig(
@@ -45,10 +49,11 @@ class EggConfig {
       temp: temp ?? this.temp,
       style: style ?? this.style,
       customTime: clearCustomTime ? null : (customTime ?? this.customTime),
+      eggCount: eggCount ?? this.eggCount,
     );
   }
 
   @override
   String toString() =>
-      'EggConfig(size: $size, temp: $temp, style: $style, customTime: $customTime)';
+      'EggConfig(size: $size, temp: $temp, style: $style, customTime: $customTime, eggCount: $eggCount)';
 }

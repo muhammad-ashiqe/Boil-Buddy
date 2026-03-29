@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../services/audio_service.dart';
 import '../providers/timer_provider.dart';
 
 /// Adapts the bottom action area based on timer state:
@@ -30,7 +31,7 @@ class StartStopButton extends ConsumerWidget {
           colors: [AppTheme.brightRed, AppTheme.darkMaroon],
           shadowColor: AppTheme.darkMaroon,
           onTap: () {
-            SystemSound.play(SystemSoundType.click);
+            AudioService.instance.playClick();
             HapticFeedback.lightImpact();
             notifier.start();
           },
@@ -48,7 +49,7 @@ class StartStopButton extends ConsumerWidget {
                 colors: [const Color(0xFFF57C00), const Color(0xFFE65100)],
                 shadowColor: const Color(0xFFF57C00),
                 onTap: () {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
                   notifier.pause();
                 },
@@ -61,7 +62,7 @@ class StartStopButton extends ConsumerWidget {
                 label: 'CANCEL',
                 icon: Icons.close_rounded,
                 onTap: () {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
                   notifier.stop();
                 },
@@ -82,7 +83,7 @@ class StartStopButton extends ConsumerWidget {
                 colors: [AppTheme.brightRed, AppTheme.darkMaroon],
                 shadowColor: AppTheme.darkMaroon,
                 onTap: () {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
                   notifier.resume();
                 },
@@ -95,7 +96,7 @@ class StartStopButton extends ConsumerWidget {
                 label: 'CANCEL',
                 icon: Icons.close_rounded,
                 onTap: () {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
                   notifier.stop();
                 },
@@ -109,13 +110,13 @@ class StartStopButton extends ConsumerWidget {
         return _CompletionButtons(
           onRescue: () {
             if (onRescue != null) {
-              SystemSound.play(SystemSoundType.click);
+              AudioService.instance.playClick();
               HapticFeedback.lightImpact();
               onRescue!();
             }
           },
           onBoilAgain: () {
-            SystemSound.play(SystemSoundType.click);
+            AudioService.instance.playClick();
             HapticFeedback.lightImpact();
             notifier.restart();
           },

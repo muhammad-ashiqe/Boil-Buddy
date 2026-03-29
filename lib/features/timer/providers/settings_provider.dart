@@ -34,6 +34,11 @@ class EggSettingsNotifier extends StateNotifier<EggConfig> {
     _notifyTimer();
   }
 
+  void setEggCount(int count) {
+    state = state.copyWith(eggCount: count);
+    _notifyTimer();
+  }
+
   void _notifyTimer() {
     _ref.read(timerProvider.notifier).updateConfig(state);
   }

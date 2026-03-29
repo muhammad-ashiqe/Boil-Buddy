@@ -14,10 +14,10 @@ class TimerDisplay extends ConsumerWidget {
   }
 
   Color _progressColor(double p) {
-    if (p < 0.25) return AppTheme.brightRed;
-    if (p < 0.5) return AppTheme.deepRed;
+    if (p < 0.3) return AppTheme.brightRed;
+    if (p < 0.6) return AppTheme.deepRed;
     if (p < 0.9) return AppTheme.accentOrange;
-    return AppTheme.darkMaroon;
+    return AppTheme.successGreen;
   }
 
   @override
@@ -92,11 +92,11 @@ class TimerDisplay extends ConsumerWidget {
       case AnimationState.chilling:
         return AppTheme.deepRed;
       case AnimationState.warming:
-        return const Color(0xFFA00000);
+        return AppTheme.brightRed;
       case AnimationState.boiling:
         return AppTheme.accentOrange;
       case AnimationState.panic:
-        return const Color(0xFF4A0000);
+        return AppTheme.successGreen;
       case AnimationState.celebrate:
         return AppTheme.successGreen;
     }
@@ -134,23 +134,12 @@ class TimerDisplay extends ConsumerWidget {
     return Container(
       key: const ValueKey('done'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.successGreen,
-        borderRadius: BorderRadius.circular(40),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.successGreen.withOpacity(0.35),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
       child: Text(
         '00:00',
         style: Theme.of(context).textTheme.displayLarge?.copyWith(
-              fontSize: 28,
+              fontSize: 32,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: AppTheme.successGreen,
               letterSpacing: 2,
             ),
       ),

@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
-
+import '../../../services/audio_service.dart';
 import '../providers/timer_provider.dart';
 
 class EggDialogueWidget extends ConsumerStatefulWidget {
@@ -78,7 +78,7 @@ class _EggDialogueWidgetState extends ConsumerState<EggDialogueWidget>
         _pickQuote(null);
         if (mounted) {
           setState(() => _isVisible = true);
-          SystemSound.play(SystemSoundType.click);
+          AudioService.instance.playPop();
           HapticFeedback.selectionClick();
         }
         _scheduleNextQuote();
@@ -122,7 +122,7 @@ class _EggDialogueWidgetState extends ConsumerState<EggDialogueWidget>
           _isVisible = true;
           _pickQuote(next);
         });
-        SystemSound.play(SystemSoundType.click);
+        AudioService.instance.playPop();
         HapticFeedback.selectionClick();
         _scheduleNextQuote(forceHideAfter: true);
       }

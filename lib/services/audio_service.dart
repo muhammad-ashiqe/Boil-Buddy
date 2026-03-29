@@ -6,6 +6,7 @@ class AudioService {
 
   final AudioPlayer _boilingPlayer = AudioPlayer();
   final AudioPlayer _alarmPlayer = AudioPlayer();
+  final AudioPlayer _uiPlayer = AudioPlayer(); // dedicated for UI blips
 
   bool _boilingPlaying = false;
 
@@ -22,15 +23,25 @@ class AudioService {
   }
 
   Future<void> playAlarm() async {
-    await _alarmPlayer.play(AssetSource('audio/alarm.mp3'));
+    await _alarmPlayer.play(AssetSource('audio/alarm.wav'));
   }
 
   Future<void> stopAlarm() async {
     await _alarmPlayer.stop();
   }
 
+  Future<void> playClick() async {
+    // Overwrite any currently playing UI sound instantly
+    await _uiPlayer.play(AssetSource('audio/click.wav'));
+  }
+
+  Future<void> playPop() async {
+    await _uiPlayer.play(AssetSource('audio/pop.wav'));
+  }
+
   Future<void> dispose() async {
     await _boilingPlayer.dispose();
     await _alarmPlayer.dispose();
+    await _uiPlayer.dispose();
   }
 }

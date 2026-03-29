@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibration/vibration.dart';
 
 import '../../../core/models/egg_config.dart';
+import '../../../services/audio_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/settings_provider.dart';
 import '../providers/timer_provider.dart';
@@ -36,7 +37,7 @@ class EggSelectorWidget extends ConsumerWidget {
                 locked: isLocked,
                 isActive: !hasCustomTime,
                 onSelected: (val) {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   Vibration.vibrate(duration: 18, amplitude: 40);
                   ref.read(eggSettingsProvider.notifier).setSize(val);
                 },
@@ -51,7 +52,7 @@ class EggSelectorWidget extends ConsumerWidget {
                 locked: isLocked,
                 isActive: !hasCustomTime,
                 onSelected: (val) {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   Vibration.vibrate(duration: 18, amplitude: 40);
                   ref.read(eggSettingsProvider.notifier).setTemp(val);
                 },
@@ -66,7 +67,7 @@ class EggSelectorWidget extends ConsumerWidget {
                 locked: isLocked,
                 isActive: !hasCustomTime,
                 onSelected: (val) {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   Vibration.vibrate(duration: 18, amplitude: 40);
                   ref.read(eggSettingsProvider.notifier).setStyle(val);
                 },
@@ -76,7 +77,7 @@ class EggSelectorWidget extends ConsumerWidget {
                 locked: isLocked,
                 customTime: config.customTime,
                 onTimeSelected: (val) {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   Vibration.vibrate(duration: 18, amplitude: 40);
                   ref.read(eggSettingsProvider.notifier).setCustomTime(val);
                 },
@@ -412,6 +413,7 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
           child: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.textDark),
             decoration: InputDecoration(

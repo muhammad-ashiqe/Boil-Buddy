@@ -1,8 +1,13 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rive/rive.dart';
 
 import '../providers/timer_provider.dart';
+import '../providers/settings_provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../services/audio_service.dart';
 import 'reactive_egg.dart';
 import 'egg_dialogue.dart';
 
@@ -98,6 +103,13 @@ class _EggAnimationWidgetState extends ConsumerState<EggAnimationWidget>
                 top: 40,
                 right: 20,
                 child: EggDialogueWidget(),
+              ),
+              
+              // 5. Egg Count Badge
+              const Positioned(
+                bottom: 20,
+                right: 15,
+                child: EggCountBadge(),
               ),
             ],
           ),
@@ -412,4 +424,225 @@ class _PotFrontPainter extends CustomPainter {
       o.animState != animState ||
       o.progress != progress ||
       o.bubbleT != bubbleT;
+}
+
+class EggCountBadge extends ConsumerWidget {
+  const EggCountBadge({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final eggConfig = ref.watch(eggSettingsProvider);
+    final count = eggConfig.eggCount;
+    final isLocked = ref.watch(timerProvider).status == TimerStatus.running ||
+        ref.watch(timerProvider).status == TimerStatus.paused;
+
+    if (count > 1) {
+      return GestureDetector(
+        onTap: isLocked ? null : () {
+          AudioService.instance.playClick();
+          _showCountAdjuster(context, ref, count);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.deepRed,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$count Eggs',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              if (!isLocked) ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    AudioService.instance.playClick();
+                    ref.read(eggSettingsProvider.notifier).setEggCount(1);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    } else {
+      // count == 1
+      return GestureDetector(
+        onTap: isLocked ? null : () {
+          AudioService.instance.playClick();
+          _showCountAdjuster(context, ref, count);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: AppTheme.softGrey, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add, size: 22, color: AppTheme.textMedium),
+              SizedBox(width: 6),
+              Text(
+                'Egg',
+                style: TextStyle(
+                  color: AppTheme.textMedium,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showCountAdjuster(
+      BuildContext context, WidgetRef ref, int initialCount) {
+    int tempCount = initialCount;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
+              backgroundColor: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.egg_alt_outlined,
+                        size: 48, color: AppTheme.deepRed),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'How many eggs?',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: tempCount > 1
+                              ? () {
+                                  AudioService.instance.playClick();
+                                  setState(() => tempCount--);
+                                }
+                              : null,
+                          icon: const Icon(Icons.remove_circle_outline),
+                          color: AppTheme.deepRed,
+                          iconSize: 32,
+                        ),
+                        const SizedBox(width: 24),
+                        Text(
+                          '$tempCount',
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textDark,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        IconButton(
+                          onPressed: tempCount < 12 // Cap at 12 eggs
+                              ? () {
+                                  AudioService.instance.playClick();
+                                  setState(() => tempCount++);
+                                }
+                              : null,
+                          icon: const Icon(Icons.add_circle_outline),
+                          color: AppTheme.deepRed,
+                          iconSize: 32,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel',
+                                style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              AudioService.instance.playClick();
+                              ref
+                                  .read(eggSettingsProvider.notifier)
+                                  .setEggCount(tempCount);
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.deepRed,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              elevation: 0,
+                            ),
+                            child: const Text('Confirm',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
