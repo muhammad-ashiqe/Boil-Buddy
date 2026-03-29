@@ -15,17 +15,27 @@ class EggSettingsNotifier extends StateNotifier<EggConfig> {
         ));
 
   void setSize(EggSize size) {
-    state = state.copyWith(size: size);
+    state = state.copyWith(size: size, clearCustomTime: true);
     _notifyTimer();
   }
 
   void setTemp(EggTemp temp) {
-    state = state.copyWith(temp: temp);
+    state = state.copyWith(temp: temp, clearCustomTime: true);
     _notifyTimer();
   }
 
   void setStyle(EggStyle style) {
-    state = state.copyWith(style: style);
+    state = state.copyWith(style: style, clearCustomTime: true);
+    _notifyTimer();
+  }
+
+  void setCustomTime(Duration time) {
+    state = state.copyWith(customTime: time);
+    _notifyTimer();
+  }
+
+  void setEggCount(int count) {
+    state = state.copyWith(eggCount: count);
     _notifyTimer();
   }
 

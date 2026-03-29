@@ -21,18 +21,28 @@ const Map<String, Duration> _kBoilTimesFridge = {
 
 /// Returns boil duration for the given egg configuration.
 /// Room temp eggs subtract 45 seconds from the fridge base time.
+/// Adds 30 seconds for each additional egg in the pot.
 Duration getBoilDuration(EggConfig config) {
+  if (config.customTime != null) {
+    return config.customTime!;
+  }
+
   final key = '${config.size.name}_${config.style.name}';
   final base = _kBoilTimesFridge[key] ?? const Duration(minutes: 8); // safe fallback
 
+  Duration adjusted = base;
+
   if (config.temp == EggTemp.room) {
     // PRD: subtract 30–60 seconds; we use 45s midpoint
-    final adjusted = base - const Duration(seconds: 45);
-    // Don't go below 3 minutes
-    return adjusted < const Duration(minutes: 3)
-        ? const Duration(minutes: 3)
-        : adjusted;
+    adjusted = adjusted - const Duration(seconds: 45);
   }
 
-  return base;
+  if (config.eggCount > 1) {
+    adjusted = adjusted + Duration(seconds: 30 * (config.eggCount - 1));
+  }
+
+  // Don't go below 3 minutes
+  return adjusted < const Duration(minutes: 3)
+      ? const Duration(minutes: 3)
+      : adjusted;
 }
