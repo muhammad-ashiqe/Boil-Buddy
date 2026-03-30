@@ -6,12 +6,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../services/audio_service.dart';
 import '../providers/timer_provider.dart';
 
-/// Adapts the bottom action area based on timer state:
-///
-///  idle     → [START BOILING 🥚]
-///  running  → [⏸ PAUSE]  [✕ CANCEL]
-///  paused   → [▶ RESUME]  [✕ CANCEL]
-///  complete → [🥚 RESCUE EGG!]  [↺ BOIL AGAIN]
 class StartStopButton extends ConsumerWidget {
   final VoidCallback? onRescue;
 
@@ -21,15 +15,17 @@ class StartStopButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final timer = ref.watch(timerProvider);
     final notifier = ref.read(timerProvider.notifier);
+    final cs = Theme.of(context).colorScheme;
+
+    final primaryLight = Color.lerp(cs.primary, Colors.white, 0.25)!;
 
     switch (timer.status) {
-      // ── IDLE ────────────────────────────────────────────────────────────
       case TimerStatus.idle:
         return _BigButton(
           label: 'START BOILING! 🥚',
           icon: Icons.play_arrow_rounded,
-          colors: [AppTheme.brightRed, AppTheme.darkMaroon],
-          shadowColor: AppTheme.darkMaroon,
+          colors: [primaryLight, cs.primary],
+          shadowColor: cs.primary,
           onTap: () {
             AudioService.instance.playClick();
             HapticFeedback.lightImpact();
@@ -37,7 +33,6 @@ class StartStopButton extends ConsumerWidget {
           },
         );
 
-      // ── RUNNING ─────────────────────────────────────────────────────────
       case TimerStatus.running:
         return Row(
           children: [
@@ -46,8 +41,8 @@ class StartStopButton extends ConsumerWidget {
               child: _BigButton(
                 label: 'PAUSE',
                 icon: Icons.pause_rounded,
-                colors: [const Color(0xFFF57C00), const Color(0xFFE65100)],
-                shadowColor: const Color(0xFFF57C00),
+                colors: [primaryLight, cs.primary],
+                shadowColor: cs.primary,
                 onTap: () {
                   AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
@@ -71,7 +66,6 @@ class StartStopButton extends ConsumerWidget {
           ],
         );
 
-      // ── PAUSED ──────────────────────────────────────────────────────────
       case TimerStatus.paused:
         return Row(
           children: [
@@ -80,8 +74,8 @@ class StartStopButton extends ConsumerWidget {
               child: _BigButton(
                 label: 'RESUME',
                 icon: Icons.play_arrow_rounded,
-                colors: [AppTheme.brightRed, AppTheme.darkMaroon],
-                shadowColor: AppTheme.darkMaroon,
+                colors: [primaryLight, cs.primary],
+                shadowColor: cs.primary,
                 onTap: () {
                   AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
@@ -105,7 +99,6 @@ class StartStopButton extends ConsumerWidget {
           ],
         );
 
-      // ── COMPLETE ────────────────────────────────────────────────────────
       case TimerStatus.complete:
         return _CompletionButtons(
           onRescue: () {
@@ -235,14 +228,15 @@ class _OutlineButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 62,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.softGrey, width: 1.5),
+          border: Border.all(color: cs.outline.withOpacity(0.4), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.06),
@@ -254,12 +248,12 @@ class _OutlineButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppTheme.textMedium, size: 20),
+            Icon(icon, color: cs.onSurface.withOpacity(0.6), size: 20),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: AppTheme.textMedium,
+                color: cs.onSurface.withOpacity(0.6),
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
@@ -308,9 +302,10 @@ class _CompletionButtonsState extends State<_CompletionButtons>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        // Rescue egg (pulsing green)
+        // Rescue egg — theme primary with success tint
         Expanded(
           flex: 3,
           child: ScaleTransition(
@@ -320,15 +315,18 @@ class _CompletionButtonsState extends State<_CompletionButtons>
               child: Container(
                 height: 62,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)],
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.lerp(cs.primary, Colors.white, 0.2)!,
+                      cs.primary,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.successGreen.withOpacity(0.50),
+                      color: cs.primary.withOpacity(0.45),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -355,7 +353,7 @@ class _CompletionButtonsState extends State<_CompletionButtons>
           ),
         ),
         const SizedBox(width: 12),
-        // Boil Again
+        // Boil Again — theme-aware
         Expanded(
           flex: 2,
           child: GestureDetector(
@@ -363,9 +361,10 @@ class _CompletionButtonsState extends State<_CompletionButtons>
             child: Container(
               height: 62,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cs.surface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.softGrey, width: 1.5),
+                border:
+                    Border.all(color: cs.outline.withOpacity(0.4), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.06),
@@ -377,13 +376,12 @@ class _CompletionButtonsState extends State<_CompletionButtons>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.replay_rounded,
-                      color: AppTheme.deepRed, size: 22),
+                  Icon(Icons.replay_rounded, color: cs.primary, size: 22),
                   const SizedBox(height: 2),
                   Text(
                     'Boil Again',
                     style: TextStyle(
-                      color: AppTheme.deepRed,
+                      color: cs.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),

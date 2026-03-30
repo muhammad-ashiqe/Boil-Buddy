@@ -6,6 +6,7 @@ import 'package:vibration/vibration.dart';
 import '../../../core/models/egg_config.dart';
 import '../../../services/audio_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/timer_provider.dart';
 
@@ -85,12 +86,12 @@ class EggSelectorWidget extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Tap the items to adjust according to your settings',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textMedium,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -125,6 +126,7 @@ class _DropdownSelector<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final curIndex = items.indexOf(value);
     final curLabel = itemLabels[curIndex];
+    final cs = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: locked
@@ -141,9 +143,9 @@ class _DropdownSelector<T> extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cs.surface,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.softGrey, width: 2),
+                border: Border.all(color: cs.outline.withOpacity(0.4), width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.06),
@@ -163,8 +165,8 @@ class _DropdownSelector<T> extends StatelessWidget {
                     },
                     child: Icon(
                       icon,
-                      key: ValueKey<T>(value), // Forces animation switch
-                      color: isActive ? AppTheme.deepRed : Colors.grey,
+                      key: ValueKey<T>(value),
+                      color: isActive ? cs.primary : Colors.grey,
                       size: 24,
                     ),
                   ),
@@ -174,7 +176,7 @@ class _DropdownSelector<T> extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: isActive ? AppTheme.textDark : Colors.grey,
+                      color: isActive ? cs.onSurface : Colors.grey,
                     ),
                   ),
                 ],
@@ -183,10 +185,10 @@ class _DropdownSelector<T> extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: AppTheme.textMedium,
+                color: cs.onSurface.withOpacity(0.7),
               ),
             ),
           ],
@@ -224,6 +226,7 @@ class _CustomTimerSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = customTime != null;
+    final cs = Theme.of(context).colorScheme;
     String displayTime = 'Timer';
     if (isActive) {
       final m = customTime!.inMinutes.toString().padLeft(2, '0');
@@ -241,10 +244,10 @@ class _CustomTimerSelector extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: isActive ? AppTheme.deepRed : Colors.white,
+                color: isActive ? cs.primary : cs.surface,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isActive ? AppTheme.deepRed : AppTheme.softGrey,
+                  color: isActive ? cs.primary : cs.outline.withOpacity(0.4),
                   width: 2,
                 ),
                 boxShadow: [
@@ -260,7 +263,7 @@ class _CustomTimerSelector extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.timer,
-                    color: isActive ? Colors.white : AppTheme.deepRed,
+                    color: isActive ? Colors.white : cs.primary,
                     size: 24,
                   ),
                   const SizedBox(height: 2),
@@ -269,19 +272,19 @@ class _CustomTimerSelector extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: isActive ? Colors.white : AppTheme.textDark,
+                      color: isActive ? Colors.white : cs.onSurface,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Custom',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: AppTheme.textMedium,
+                color: cs.onSurface.withOpacity(0.7),
               ),
             ),
           ],
@@ -335,22 +338,23 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: Colors.white,
+      backgroundColor: cs.surface,
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.timer_outlined, size: 48, color: AppTheme.deepRed),
+            Icon(Icons.timer_outlined, size: 48, color: cs.primary),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Set Custom Timer',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
+                color: cs.onSurface,
               ),
             ),
             const SizedBox(height: 24),
@@ -360,17 +364,19 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
                 _buildTimeField(
                   controller: _minutesController,
                   label: 'Min',
+                  cs: cs,
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
                     ':',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.textMedium),
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.6)),
                   ),
                 ),
                 _buildTimeField(
                   controller: _secondsController,
                   label: 'Sec',
+                  cs: cs,
                 ),
               ],
             ),
@@ -380,7 +386,7 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: Text('Cancel', style: TextStyle(color: cs.onSurface.withOpacity(0.5), fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -388,7 +394,7 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
                   child: ElevatedButton(
                     onPressed: _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.deepRed,
+                      backgroundColor: cs.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -405,7 +411,11 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
     );
   }
 
-  Widget _buildTimeField({required TextEditingController controller, required String label}) {
+  Widget _buildTimeField({
+    required TextEditingController controller,
+    required String label,
+    required ColorScheme cs,
+  }) {
     return Column(
       children: [
         SizedBox(
@@ -415,11 +425,11 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: cs.onSurface),
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(vertical: 16),
               filled: true,
-              fillColor: AppTheme.softGrey.withOpacity(0.3),
+              fillColor: cs.outline.withOpacity(0.1),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
@@ -430,7 +440,7 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
         const SizedBox(height: 8),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMedium),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.6)),
         ),
       ],
     );

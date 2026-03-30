@@ -1,88 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AppTheme {
-  // ── New Palette: Deep Maroon / Red / Cream ─────────────────────────────
-  static const Color darkMaroon   = Color(0xFF2D0000); // darkest — headeraccents
-  static const Color deepRed      = Color(0xFF8B0000); // primary actions / buttons
-  static const Color brightRed    = Color(0xFFA80000); // interactive highlights
-  static const Color cream        = Color(0xFFFAEBD7); // background / softWhite
+import 'app_color_scheme.dart';
 
-  // ── Semantic aliases (used across other files) ─────────────────────────
-  /// Background colour (replaces softWhite)
+class AppTheme {
+  // ── Static constants (Classic Red — default) ────────────────────────────
+  static const Color darkMaroon   = Color(0xFF2D0000);
+  static const Color deepRed      = Color(0xFF8B0000);
+  static const Color brightRed    = Color(0xFFA80000);
+  static const Color cream        = Color(0xFFFAEBD7);
+
   static const Color softWhite    = cream;
-  /// Primary brand colour (replaces kitchenBlue)
   static const Color kitchenBlue  = brightRed;
-  /// Deeper brand colour (replaces deepBlue)
   static const Color deepBlue     = deepRed;
-  /// Warm accent (replaces warmYellow — now a lighter red-tinted cream)
   static const Color warmYellow   = Color(0xFFD4A090);
-  /// Egg shell tone
   static const Color eggShell     = Color(0xFFFFF0E8);
-  /// Soft bubble tint (replaces bubbleBlue)
   static const Color bubbleBlue   = Color(0xFFEAB8B8);
-  /// Dividers / borders
   static const Color softGrey     = Color(0xFFE0D5D5);
-  /// Primary text
   static const Color textDark     = Color(0xFF1A0000);
-  /// Secondary text
   static const Color textMedium   = Color(0xFF6B3030);
-  /// Success state (soft green kept for contrast)
   static const Color successGreen = Color(0xFF4CAF50);
-  /// Heat / urgency accent
   static const Color accentOrange = Color(0xFFCC3300);
 
-  static ThemeData get lightTheme {
+  // ── Classic Red fallback (used before theme provider is ready) ──────────
+  static ThemeData get lightTheme =>
+      buildTheme(AppColorScheme.presets.first);
+
+  // ── Dynamic theme factory ───────────────────────────────────────────────
+  static ThemeData buildTheme(AppColorScheme scheme) {
+    final isDark = scheme.brightness == Brightness.dark;
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: scheme.primary,
+      brightness: scheme.brightness,
+      primary: scheme.primary,
+      secondary: scheme.accent,
+      surface: scheme.surface,
+      background: scheme.background,
+    );
+
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: deepRed,
-        brightness: Brightness.light,
-        primary: deepRed,
-        secondary: brightRed,
-        surface: cream,
-        background: cream,
-      ),
-      scaffoldBackgroundColor: cream,
+      brightness: scheme.brightness,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: scheme.background,
       textTheme: GoogleFonts.nunitoTextTheme(
-        const TextTheme(
+        TextTheme(
           displayLarge: TextStyle(
             fontSize: 72,
             fontWeight: FontWeight.w800,
-            color: darkMaroon,
+            color: scheme.textDark,
             letterSpacing: -2,
           ),
           displayMedium: TextStyle(
             fontSize: 48,
             fontWeight: FontWeight.w800,
-            color: darkMaroon,
+            color: scheme.textDark,
           ),
           headlineLarge: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: darkMaroon,
+            color: scheme.textDark,
           ),
           headlineMedium: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: darkMaroon,
+            color: scheme.textDark,
           ),
           titleLarge: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: darkMaroon,
+            color: scheme.textDark,
           ),
           bodyLarge: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w400,
-            color: textDark,
+            color: scheme.textDark,
           ),
           bodyMedium: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: textMedium,
+            color: scheme.textMedium,
           ),
-          labelLarge: TextStyle(
+          labelLarge: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: Colors.white,
@@ -91,10 +90,10 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: deepRed,
+          backgroundColor: scheme.primary,
           foregroundColor: Colors.white,
           elevation: 4,
-          shadowColor: deepRed.withOpacity(0.4),
+          shadowColor: scheme.primary.withOpacity(0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -106,25 +105,30 @@ class AppTheme {
         ),
       ),
       cardTheme: CardTheme(
-        color: Colors.white,
+        color: scheme.surface,
         elevation: 4,
-        shadowColor: darkMaroon.withOpacity(0.10),
+        shadowColor: scheme.textDark.withOpacity(0.10),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: cream,
+        backgroundColor: scheme.background,
         elevation: 0,
         scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(color: darkMaroon),
+        iconTheme: IconThemeData(color: scheme.textDark),
         titleTextStyle: GoogleFonts.nunito(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: darkMaroon,
+          color: scheme.textDark,
         ),
       ),
-      iconTheme: const IconThemeData(color: darkMaroon, size: 24),
+      iconTheme: IconThemeData(color: isDark ? scheme.textDark : darkMaroon, size: 24),
+      dialogTheme: DialogTheme(
+        backgroundColor: scheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
     );
   }
 }
+

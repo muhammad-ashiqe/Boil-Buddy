@@ -435,6 +435,7 @@ class EggCountBadge extends ConsumerWidget {
     final count = eggConfig.eggCount;
     final isLocked = ref.watch(timerProvider).status == TimerStatus.running ||
         ref.watch(timerProvider).status == TimerStatus.paused;
+    final cs = Theme.of(context).colorScheme;
 
     if (count > 1) {
       return GestureDetector(
@@ -445,11 +446,11 @@ class EggCountBadge extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppTheme.deepRed,
+            color: cs.primary,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: cs.primary.withOpacity(0.35),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -501,9 +502,9 @@ class EggCountBadge extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: AppTheme.softGrey, width: 2),
+            border: Border.all(color: cs.outline.withOpacity(0.4), width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -512,15 +513,15 @@ class EggCountBadge extends ConsumerWidget {
               ),
             ],
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.add, size: 22, color: AppTheme.textMedium),
-              SizedBox(width: 6),
+              Icon(Icons.add, size: 22, color: cs.primary),
+              const SizedBox(width: 6),
               Text(
                 'Egg',
                 style: TextStyle(
-                  color: AppTheme.textMedium,
+                  color: cs.onSurface.withOpacity(0.7),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -538,26 +539,27 @@ class EggCountBadge extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) {
+        final cs = Theme.of(context).colorScheme;
         return StatefulBuilder(
           builder: (context, setState) {
             return Dialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24)),
-              backgroundColor: Colors.white,
+              backgroundColor: cs.surface,
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.egg_alt_outlined,
-                        size: 48, color: AppTheme.deepRed),
+                    Icon(Icons.egg_alt_outlined,
+                        size: 48, color: cs.primary),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'How many eggs?',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -572,28 +574,28 @@ class EggCountBadge extends ConsumerWidget {
                                 }
                               : null,
                           icon: const Icon(Icons.remove_circle_outline),
-                          color: AppTheme.deepRed,
+                          color: cs.primary,
                           iconSize: 32,
                         ),
                         const SizedBox(width: 24),
                         Text(
                           '$tempCount',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textDark,
+                            color: cs.onSurface,
                           ),
                         ),
                         const SizedBox(width: 24),
                         IconButton(
-                          onPressed: tempCount < 12 // Cap at 12 eggs
+                          onPressed: tempCount < 12
                               ? () {
                                   AudioService.instance.playClick();
                                   setState(() => tempCount++);
                                 }
                               : null,
                           icon: const Icon(Icons.add_circle_outline),
-                          color: AppTheme.deepRed,
+                          color: cs.primary,
                           iconSize: 32,
                         ),
                       ],
@@ -604,9 +606,9 @@ class EggCountBadge extends ConsumerWidget {
                         Expanded(
                           child: TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel',
+                            child: Text('Cancel',
                                 style: TextStyle(
-                                    color: Colors.grey,
+                                    color: cs.onSurface.withOpacity(0.5),
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold)),
                           ),
@@ -622,7 +624,7 @@ class EggCountBadge extends ConsumerWidget {
                               Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.deepRed,
+                              backgroundColor: cs.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16)),
@@ -646,3 +648,4 @@ class EggCountBadge extends ConsumerWidget {
     );
   }
 }
+

@@ -3,7 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../../services/audio_service.dart';
 import '../../../services/hive_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -25,7 +26,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _haptics = HiveService.hapticsEnabled;
   }
 
-
   void _onVersionTap() {
     if (!kDebugMode) return;
     _versionTapCount++;
@@ -43,34 +43,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = ref.watch(themeProvider);
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppTheme.softWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: AppTheme.softWhite,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        iconTheme: IconThemeData(color: cs.primary),
+        titleTextStyle: Theme.of(context).appBarTheme.titleTextStyle,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _sectionHeader(context, 'Preferences'),
+          _sectionHeader(context, 'Preferences', scheme.textMedium),
           _SettingsCard(
+            surfaceColor: Theme.of(context).cardColor,
             children: [
               _toggle(
                 label: '🔊 Sound',
                 value: _sound,
+                activeColor: cs.primary,
                 onChanged: (v) {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
                   setState(() => _sound = v);
                   HiveService.setSoundEnabled(v);
                 },
               ),
-              _divider(),
+              _divider(scheme.softBorder),
               _toggle(
                 label: '📳 Haptics',
                 value: _haptics,
+                activeColor: cs.primary,
                 onChanged: (v) {
-                  SystemSound.play(SystemSoundType.click);
+                  AudioService.instance.playClick();
                   HapticFeedback.lightImpact();
                   setState(() => _haptics = v);
                   HiveService.setHapticsEnabled(v);
@@ -79,18 +87,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _sectionHeader(context, 'About'),
+          _sectionHeader(context, 'About', scheme.textMedium),
           _SettingsCard(
+            surfaceColor: Theme.of(context).cardColor,
             children: [
               GestureDetector(
                 onTap: _onVersionTap,
                 child: _infoTile(
                   label: 'Version',
                   subtitle: '1.1.0 (Build 1)${kDebugMode ? ' [DEBUG]' : ''}',
+                  textColor: scheme.textDark,
+                  subtitleColor: scheme.textMedium,
                 ),
               ),
-              _divider(),
-              _infoTile(label: 'App', subtitle: 'Boil Buddy: Perfect Egg Timer'),
+              _divider(scheme.softBorder),
+              _infoTile(
+                label: 'App',
+                subtitle: 'Boil Buddy: Perfect Egg Timer',
+                textColor: scheme.textDark,
+                subtitleColor: scheme.textMedium,
+              ),
             ],
           ),
           const SizedBox(height: 40),
@@ -99,14 +115,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _sectionHeader(BuildContext context, String title) {
+  Widget _sectionHeader(BuildContext context, String title, Color color) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppTheme.textMedium,
+              color: color,
               letterSpacing: 1.5,
               fontSize: 11,
             ),
@@ -117,37 +133,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _toggle({
     required String label,
     required bool value,
+    required Color activeColor,
     required ValueChanged<bool> onChanged,
   }) {
     return SwitchListTile(
-      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(label,
+          style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface)),
       value: value,
       onChanged: onChanged,
-      activeColor: AppTheme.kitchenBlue,
+      activeColor: activeColor,
     );
   }
 
-  ListTile _infoTile({required String label, required String subtitle}) {
+  Widget _infoTile({
+    required String label,
+    required String subtitle,
+    required Color textColor,
+    required Color subtitleColor,
+  }) {
     return ListTile(
-      title:
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
+      title: Text(label,
+          style: TextStyle(fontWeight: FontWeight.w600, color: textColor)),
+      subtitle: Text(subtitle, style: TextStyle(color: subtitleColor)),
     );
   }
 
-  Widget _divider() =>
-      const Divider(height: 1, indent: 16, endIndent: 16);
+  Widget _divider(Color color) =>
+      Divider(height: 1, indent: 16, endIndent: 16, color: color);
 }
 
 class _SettingsCard extends StatelessWidget {
   final List<Widget> children;
-  const _SettingsCard({required this.children});
+  final Color surfaceColor;
+  const _SettingsCard({required this.children, required this.surfaceColor});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -164,3 +190,4 @@ class _SettingsCard extends StatelessWidget {
     );
   }
 }
+

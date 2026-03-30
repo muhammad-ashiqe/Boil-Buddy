@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'features/timer/screens/home_screen.dart';
 import 'services/hive_service.dart';
 import 'services/notification_service.dart';
@@ -32,15 +33,16 @@ void main() async {
   );
 }
 
-class YolkHeroApp extends StatelessWidget {
+class YolkHeroApp extends ConsumerWidget {
   const YolkHeroApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = ref.watch(themeProvider);
     return MaterialApp(
       title: 'Boil Buddy',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.buildTheme(scheme),
       home: const HomeScreen(),
     );
   }

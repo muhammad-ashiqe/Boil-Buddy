@@ -13,11 +13,27 @@ class TimerDisplay extends ConsumerWidget {
     return '$m:$s';
   }
 
-  Color _progressColor(double p) {
-    if (p < 0.3) return AppTheme.brightRed;
-    if (p < 0.6) return AppTheme.deepRed;
-    if (p < 0.9) return AppTheme.accentOrange;
+  /// Progress color: fades from primary → accent → success green
+  Color _progressColor(double p, Color primary, Color accent) {
+    if (p < 0.3) return primary;
+    if (p < 0.6) return Color.lerp(primary, accent, (p - 0.3) / 0.3)!;
+    if (p < 0.9) return Color.lerp(accent, AppTheme.successGreen, (p - 0.6) / 0.3)!;
     return AppTheme.successGreen;
+  }
+
+  Color _timerColor(AnimationState state, Color primary) {
+    switch (state) {
+      case AnimationState.chilling:
+        return primary;
+      case AnimationState.warming:
+        return Color.lerp(primary, AppTheme.accentOrange, 0.4)!;
+      case AnimationState.boiling:
+        return AppTheme.accentOrange;
+      case AnimationState.panic:
+        return AppTheme.successGreen;
+      case AnimationState.celebrate:
+        return AppTheme.successGreen;
+    }
   }
 
   @override
@@ -26,6 +42,7 @@ class TimerDisplay extends ConsumerWidget {
     final displayTime = timer.remaining;
     final isComplete = timer.isComplete;
     final progress = ref.watch(progressProvider);
+    final cs = Theme.of(context).colorScheme;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -43,9 +60,9 @@ class TimerDisplay extends ConsumerWidget {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 8,
-                  backgroundColor: AppTheme.softGrey,
+                  backgroundColor: cs.outline.withOpacity(0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    _progressColor(progress),
+                    _progressColor(progress, cs.primary, AppTheme.accentOrange),
                   ),
                   strokeCap: StrokeCap.round,
                 ),
@@ -60,7 +77,7 @@ class TimerDisplay extends ConsumerWidget {
                         style: Theme.of(context).textTheme.displayLarge?.copyWith(
                               fontSize: 32,
                               fontWeight: FontWeight.w800,
-                              color: _timerColor(timer.animationState),
+                              color: _timerColor(timer.animationState, cs.primary),
                               letterSpacing: 2,
                             ),
                       ),
@@ -76,7 +93,7 @@ class TimerDisplay extends ConsumerWidget {
             _statusLabel(timer),
             key: ValueKey(timer.status),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textMedium,
+                  color: cs.onSurface.withOpacity(0.6),
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.2,
                   fontSize: 12,
@@ -85,21 +102,6 @@ class TimerDisplay extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  Color _timerColor(AnimationState state) {
-    switch (state) {
-      case AnimationState.chilling:
-        return AppTheme.deepRed;
-      case AnimationState.warming:
-        return AppTheme.brightRed;
-      case AnimationState.boiling:
-        return AppTheme.accentOrange;
-      case AnimationState.panic:
-        return AppTheme.successGreen;
-      case AnimationState.celebrate:
-        return AppTheme.successGreen;
-    }
   }
 
   String _statusLabel(TimerState timer) {
@@ -146,3 +148,4 @@ class TimerDisplay extends ConsumerWidget {
     );
   }
 }
+
