@@ -66,7 +66,6 @@ class AppColorScheme {
     _royalPurple,
     _oceanTeal,
     _roseGold,
-    _charcoalDark,
     _candyPink,
     _goldenHour,
   ];
