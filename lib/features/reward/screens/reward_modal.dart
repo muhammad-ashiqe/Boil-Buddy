@@ -22,7 +22,6 @@ class _RewardModalState extends ConsumerState<RewardModal> {
   @override
   void initState() {
     super.initState();
-    SystemSound.play(SystemSoundType.click);
     HapticFeedback.lightImpact();
     _confetti = ConfettiController(duration: const Duration(seconds: 4));
     _loadFact();
