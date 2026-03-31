@@ -9,6 +9,7 @@ class AudioService {
   final AudioPlayer _uiPlayer = AudioPlayer(); // dedicated for UI blips
 
   bool _boilingPlaying = false;
+  bool _alarmPlaying = false;
 
   Future<void> playBoiling() async {
     if (_boilingPlaying) return;
@@ -23,10 +24,14 @@ class AudioService {
   }
 
   Future<void> playAlarm() async {
+    if (_alarmPlaying) return;
+    _alarmPlaying = true;
+    await _alarmPlayer.setReleaseMode(ReleaseMode.loop);
     await _alarmPlayer.play(AssetSource('audio/alarm.wav'));
   }
 
   Future<void> stopAlarm() async {
+    _alarmPlaying = false;
     await _alarmPlayer.stop();
   }
 
