@@ -18,10 +18,6 @@ dependencies:
   # Local storage
   hive_flutter: ^1.1.0
 
-  # Ads
-
-  # In-App Purchases (RevenueCat)
-
   # Background notifications / alarm
   flutter_local_notifications: ^17.2.2
   timezone: ^0.9.4
@@ -35,9 +31,6 @@ dependencies:
   # Haptic / vibration
   vibration: ^2.0.0
 
-  # Rive character animation
-  rive: ^0.13.12
-
   # Confetti reward effect
   confetti: ^0.7.0
 
@@ -46,10 +39,6 @@ dependencies:
 
   # Fonts
   google_fonts: ^6.2.1
-
-  # Utilities
-  shared_preferences: ^2.2.3
-  image: ^4.8.0
 
 dev_dependencies:
   flutter_test:
@@ -66,8 +55,6 @@ flutter:
   assets:
     - assets/audio/
     - assets/data/
-    - assets/rive/
-    - assets/images/
 
 flutter_launcher_icons:
   android: "ic_launcher"

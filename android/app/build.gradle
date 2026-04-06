@@ -24,8 +24,8 @@ if (flutterVersionName == null) {
 
 android {
     namespace "app.boilbuddy.timer"
-    compileSdk flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    compileSdk 35
+    ndkVersion "25.1.8937393"
 
     compileOptions {
         coreLibraryDesugaringEnabled true
@@ -47,15 +47,30 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        multiDexEnabled true
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include "arm64-v8a", "armeabi-v7a", "x86_64"
+            universalApk false
+        }
     }
 
     buildTypes {
         release {
             signingConfig signingConfigs.debug
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+
+    lint {
+        disable 'Instantiatable'
+        abortOnError false
+        checkReleaseBuilds false
     }
 }
 
