@@ -17,8 +17,7 @@ class EggSelectorWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(eggSettingsProvider);
     final status = ref.watch(timerProvider).status;
-    final isLocked =
-        status == TimerStatus.running || status == TimerStatus.paused;
+    final isLocked = status != TimerStatus.idle;
     final hasCustomTime = config.customTime != null;
 
     return Padding(
@@ -26,10 +25,11 @@ class EggSelectorWidget extends ConsumerWidget {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // ── Size ────────────────────────────────────────────────
-              _DropdownSelector<EggSize>(
+              Expanded(
+                child: _DropdownSelector<EggSize>(
                 label: 'Size',
                 icon: Icons.egg_alt_outlined,
                 value: config.size,
@@ -43,8 +43,10 @@ class EggSelectorWidget extends ConsumerWidget {
                   ref.read(eggSettingsProvider.notifier).setSize(val);
                 },
               ),
+              ),
               // ── Temp ────────────────────────────────────────────────
-              _DropdownSelector<EggTemp>(
+              Expanded(
+                child: _DropdownSelector<EggTemp>(
                 label: 'Temp',
                 icon: Icons.thermostat,
                 value: config.temp,
@@ -58,8 +60,10 @@ class EggSelectorWidget extends ConsumerWidget {
                   ref.read(eggSettingsProvider.notifier).setTemp(val);
                 },
               ),
+              ),
               // ── Style ───────────────────────────────────────────────
-              _DropdownSelector<EggStyle>(
+              Expanded(
+                child: _DropdownSelector<EggStyle>(
                 label: 'Style',
                 icon: Icons.water_drop_outlined,
                 value: config.style,
@@ -73,8 +77,10 @@ class EggSelectorWidget extends ConsumerWidget {
                   ref.read(eggSettingsProvider.notifier).setStyle(val);
                 },
               ),
+              ),
               // ── Custom Timer ────────────────────────────────────────
-              _CustomTimerSelector(
+              Expanded(
+                child: _CustomTimerSelector(
                 locked: isLocked,
                 customTime: config.customTime,
                 onTimeSelected: (val) {
@@ -82,6 +88,7 @@ class EggSelectorWidget extends ConsumerWidget {
                   Vibration.vibrate(duration: 18, amplitude: 40);
                   ref.read(eggSettingsProvider.notifier).setCustomTime(val);
                 },
+              ),
               ),
             ],
           ),
@@ -365,6 +372,7 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
                   controller: _minutesController,
                   label: 'Min',
                   cs: cs,
+                  maxVal: 59,
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -377,6 +385,7 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
                   controller: _secondsController,
                   label: 'Sec',
                   cs: cs,
+                  maxVal: 59,
                 ),
               ],
             ),
@@ -415,34 +424,54 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
     required TextEditingController controller,
     required String label,
     required ColorScheme cs,
+    required int maxVal,
   }) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 70,
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: cs.onSurface),
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
-              filled: true,
-              fillColor: cs.outline.withOpacity(0.1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
+    return GestureDetector(
+      onVerticalDragUpdate: (details) {
+        if (details.primaryDelta == null) return;
+        int currentVal = int.tryParse(controller.text) ?? 0;
+        // Sensitivity control
+        if (details.primaryDelta! > 2) {
+          currentVal--;
+        } else if (details.primaryDelta! < -2) {
+          currentVal++;
+        }
+        
+        if (currentVal < 0) currentVal = maxVal;
+        if (currentVal > maxVal) currentVal = 0;
+        
+        // Disable caret while dragging to avoid fighting with the position
+        controller.text = currentVal.toString().padLeft(2, '0');
+      },
+      child: Column(
+        children: [
+          SizedBox(
+            width: 70,
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              textAlign: TextAlign.center,
+              // Only allow cursor placement when explicitly tapped -> scrolling remains smooth
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: cs.onSurface),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                filled: true,
+                fillColor: cs.outline.withOpacity(0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.6)),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.6)),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -33,6 +33,8 @@ class TimerDisplay extends ConsumerWidget {
         return AppTheme.successGreen;
       case AnimationState.celebrate:
         return AppTheme.successGreen;
+      case AnimationState.paused:
+        return primary.withOpacity(0.5);
     }
   }
 
@@ -129,6 +131,8 @@ class TimerDisplay extends ConsumerWidget {
         return 'ALMOST DONE! ⚡';
       case AnimationState.celebrate:
         return '🎉 DONE!';
+      case AnimationState.paused:
+        return 'PAUSED';
     }
   }
 

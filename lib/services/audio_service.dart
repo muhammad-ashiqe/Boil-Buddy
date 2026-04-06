@@ -36,12 +36,11 @@ class AudioService {
   }
 
   Future<void> playClick() async {
-    // Overwrite any currently playing UI sound instantly
-    await _uiPlayer.play(AssetSource('audio/click.wav'));
+    // Sound disabled by user request
   }
 
   Future<void> playPop() async {
-    await _uiPlayer.play(AssetSource('audio/pop.wav'));
+    // Sound disabled by user request
   }
 
   Future<void> dispose() async {

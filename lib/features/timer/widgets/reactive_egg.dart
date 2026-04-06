@@ -1,14 +1,16 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-enum EggEmotion { chilled, relaxed, panicked, ascended }
+enum EggEmotion { chilled, relaxed, panicked, ascended, sad }
 
 class ReactiveEgg extends StatefulWidget {
   final double boilingIntensity;
+  final bool isPaused;
 
   const ReactiveEgg({
     super.key,
     required this.boilingIntensity,
+    this.isPaused = false,
   });
 
   @override
@@ -102,13 +104,14 @@ class _ReactiveEggState extends State<ReactiveEgg>
   @override
   void didUpdateWidget(covariant ReactiveEgg oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.boilingIntensity != widget.boilingIntensity) {
+    if (oldWidget.boilingIntensity != widget.boilingIntensity || oldWidget.isPaused != widget.isPaused) {
       _updateEmotion(widget.boilingIntensity);
     }
   }
 
   void _updateEmotion(double intensity) {
     var nextEmotion = _getEmotionFromIntensity(intensity);
+    if (widget.isPaused) nextEmotion = EggEmotion.sad;
     if (nextEmotion != _currentEmotion) {
       _previousEmotion = _currentEmotion;
       _currentEmotion = nextEmotion;
@@ -149,6 +152,7 @@ class _ReactiveEggState extends State<ReactiveEgg>
       if (!mounted) break;
       if (_currentEmotion == EggEmotion.ascended ||
           _currentEmotion == EggEmotion.chilled ||
+          _currentEmotion == EggEmotion.sad ||
           _isSurprised) {
         continue;
       }
@@ -299,6 +303,8 @@ class _EggPainter extends CustomPainter {
         return const Color(0xFFFF8A65); // Reddish
       case EggEmotion.ascended:
         return const Color(0xFFFFD54F); // Golden
+      case EggEmotion.sad:
+        return const Color(0xFFB0BEC5); // Greyish blue
     }
   }
 
@@ -312,6 +318,8 @@ class _EggPainter extends CustomPainter {
         return const Color(0xFFD84315);
       case EggEmotion.ascended:
         return const Color(0xFFFF8F00);
+      case EggEmotion.sad:
+        return const Color(0xFF78909C);
     }
   }
 
@@ -393,6 +401,9 @@ class _EggPainter extends CustomPainter {
     } else if (currentEmotion == EggEmotion.ascended ||
         (previousEmotion == EggEmotion.ascended && transitionT < 0.5)) {
       _drawAscendedFace(canvas, leftEyeC, rightEyeC, mouthC);
+    } else if (currentEmotion == EggEmotion.sad ||
+        (previousEmotion == EggEmotion.sad && transitionT < 0.5)) {
+      _drawSadFace(canvas, leftEyeC, rightEyeC, mouthC);
     } else {
       _drawRelaxedFace(canvas, leftEyeC, rightEyeC, mouthC);
     }
@@ -509,6 +520,43 @@ class _EggPainter extends CustomPainter {
         Rect.fromCenter(center: Offset(mouth.dx, mouth.dy), width: 10, height: 8),
         0.2,
         pi - 0.4,
+        false,
+        eyeP);
+  }
+
+  void _drawSadFace(
+      Canvas canvas, Offset leftEye, Offset rightEye, Offset mouth) {
+    final eyeP = Paint()
+      ..color = const Color(0xFF1E1E1E)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    // Drooping eyes
+    canvas.drawLine(Offset(leftEye.dx - 6, leftEye.dy - 3),
+        Offset(leftEye.dx + 4, leftEye.dy + 3), eyeP);
+    canvas.drawLine(Offset(rightEye.dx - 4, rightEye.dy + 3),
+        Offset(rightEye.dx + 6, rightEye.dy - 3), eyeP);
+        
+    canvas.drawArc(
+        Rect.fromCenter(center: Offset(leftEye.dx, leftEye.dy + 3), width: 8, height: 8),
+        0,
+        pi,
+        true,
+        Paint()..color = const Color(0xFF1E1E1E));
+
+    canvas.drawArc(
+        Rect.fromCenter(center: Offset(rightEye.dx, rightEye.dy + 3), width: 8, height: 8),
+        0,
+        pi,
+        true,
+        Paint()..color = const Color(0xFF1E1E1E));
+
+    // Frown
+    canvas.drawArc(
+        Rect.fromCenter(center: mouth, width: 14, height: 10),
+        pi,
+        pi,
         false,
         eyeP);
   }
