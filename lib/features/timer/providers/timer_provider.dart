@@ -12,7 +12,7 @@ import '../../../services/hive_service.dart';
 
 enum TimerStatus { idle, running, paused, complete }
 
-enum AnimationState { chilling, warming, boiling, panic, celebrate }
+enum AnimationState { chilling, warming, boiling, panic, celebrate, paused }
 
 class TimerState {
   final TimerStatus status;
@@ -129,7 +129,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
     WakelockPlus.disable();
     state = state.copyWith(
       status: TimerStatus.paused,
-      animationState: AnimationState.chilling,
+      animationState: AnimationState.paused,
     );
   }
 

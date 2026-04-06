@@ -22,7 +22,7 @@ class StartStopButton extends ConsumerWidget {
     switch (timer.status) {
       case TimerStatus.idle:
         return _BigButton(
-          label: 'START BOILING! 🥚',
+          label: 'START BOILING',
           icon: Icons.play_arrow_rounded,
           colors: [primaryLight, cs.primary],
           shadowColor: cs.primary,

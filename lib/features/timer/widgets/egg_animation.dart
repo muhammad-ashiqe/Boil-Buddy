@@ -83,6 +83,7 @@ class _EggAnimationWidgetState extends ConsumerState<EggAnimationWidget>
                 child: Center(
                   child: ReactiveEgg(
                     boilingIntensity: progress,
+                    isPaused: animState == AnimationState.paused,
                   ),
                 ),
               ),
@@ -94,6 +95,7 @@ class _EggAnimationWidgetState extends ConsumerState<EggAnimationWidget>
                     animState: animState,
                     progress: progress,
                     bubbleT: _bubbleAnim.value,
+                    isPaused: animState == AnimationState.paused,
                   ),
                 ),
               ),
@@ -126,6 +128,7 @@ Color _getWaterColor(AnimationState animState) {
     case AnimationState.boiling:
     case AnimationState.panic: return const Color(0xFF29B6F6);
     case AnimationState.celebrate: return const Color(0xFF29B6F6);
+    case AnimationState.paused: return const Color(0xFF81D4FA);
   }
 }
 
@@ -262,11 +265,13 @@ class _PotFrontPainter extends CustomPainter {
   final AnimationState animState;
   final double progress;
   final double bubbleT;
+  final bool isPaused;
 
   _PotFrontPainter({
     required this.animState,
     required this.progress,
     required this.bubbleT,
+    this.isPaused = false,
   });
 
   @override
@@ -290,7 +295,9 @@ class _PotFrontPainter extends CustomPainter {
     canvas.drawPath(frontWaterPath, Paint()..color = _getWaterColor(animState).withOpacity(0.5));
 
     // Bubbles
-    _drawBubbles(canvas, cx, waterY, potBottom, potW, bottomW, potTop, potBottom);
+    if (!isPaused) {
+      _drawBubbles(canvas, cx, waterY, potBottom, potW, bottomW, potTop, potBottom);
+    }
 
     // 2. Bowl Glass Front
     final bowlShape = _getBowlSilhouette(cx, potTop, potBottom, potW, bottomW, close: true);

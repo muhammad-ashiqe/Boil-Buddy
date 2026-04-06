@@ -17,8 +17,7 @@ class EggSelectorWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(eggSettingsProvider);
     final status = ref.watch(timerProvider).status;
-    final isLocked =
-        status == TimerStatus.running || status == TimerStatus.paused;
+    final isLocked = status != TimerStatus.idle;
     final hasCustomTime = config.customTime != null;
 
     return Padding(
@@ -26,10 +25,11 @@ class EggSelectorWidget extends ConsumerWidget {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // ── Size ────────────────────────────────────────────────
-              _DropdownSelector<EggSize>(
+              Expanded(
+                child: _DropdownSelector<EggSize>(
                 label: 'Size',
                 icon: Icons.egg_alt_outlined,
                 value: config.size,
@@ -43,8 +43,10 @@ class EggSelectorWidget extends ConsumerWidget {
                   ref.read(eggSettingsProvider.notifier).setSize(val);
                 },
               ),
+              ),
               // ── Temp ────────────────────────────────────────────────
-              _DropdownSelector<EggTemp>(
+              Expanded(
+                child: _DropdownSelector<EggTemp>(
                 label: 'Temp',
                 icon: Icons.thermostat,
                 value: config.temp,
@@ -58,8 +60,10 @@ class EggSelectorWidget extends ConsumerWidget {
                   ref.read(eggSettingsProvider.notifier).setTemp(val);
                 },
               ),
+              ),
               // ── Style ───────────────────────────────────────────────
-              _DropdownSelector<EggStyle>(
+              Expanded(
+                child: _DropdownSelector<EggStyle>(
                 label: 'Style',
                 icon: Icons.water_drop_outlined,
                 value: config.style,
@@ -73,8 +77,10 @@ class EggSelectorWidget extends ConsumerWidget {
                   ref.read(eggSettingsProvider.notifier).setStyle(val);
                 },
               ),
+              ),
               // ── Custom Timer ────────────────────────────────────────
-              _CustomTimerSelector(
+              Expanded(
+                child: _CustomTimerSelector(
                 locked: isLocked,
                 customTime: config.customTime,
                 onTimeSelected: (val) {
@@ -82,6 +88,7 @@ class EggSelectorWidget extends ConsumerWidget {
                   Vibration.vibrate(duration: 18, amplitude: 40);
                   ref.read(eggSettingsProvider.notifier).setCustomTime(val);
                 },
+              ),
               ),
             ],
           ),
@@ -337,55 +344,168 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
       backgroundColor: cs.surface,
+      elevation: 24,
+      shadowColor: Colors.black26,
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.timer_outlined, size: 48, color: cs.primary),
-            const SizedBox(height: 16),
-            Text(
-              'Set Custom Timer',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: cs.onSurface,
+            // Icon header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cs.primary.withOpacity(0.12),
+                shape: BoxShape.circle,
               ),
+              child: Icon(Icons.av_timer_rounded, size: 40, color: cs.primary),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildTimeField(
-                  controller: _minutesController,
-                  label: 'Min',
-                  cs: cs,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    ':',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.6)),
-                  ),
-                ),
-                _buildTimeField(
-                  controller: _secondsController,
-                  label: 'Sec',
-                  cs: cs,
-                ),
-              ],
+            
+            // Titles
+            Text(
+              'Custom Timer',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: cs.onSurface,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Swipe to set or tap to type',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface.withOpacity(0.5),
+              ),
             ),
             const SizedBox(height: 32),
+            
+            // Unified Input Area
+            Container(
+              height: 160,
+              decoration: BoxDecoration(
+                color: cs.outline.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: cs.outline.withOpacity(0.1), width: 1.5),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Center selection highlight
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                  
+                  // Scroll Wheels and Labels
+                  Positioned.fill(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          height: 160,
+                          child: _ScrollableWheelInput(
+                            controller: _minutesController,
+                            cs: cs,
+                            maxVal: 59,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'min',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: cs.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6.0),
+                          child: Text(
+                            ':',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: cs.primary.withOpacity(0.4),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        SizedBox(
+                          width: 80,
+                          height: 160,
+                          child: _ScrollableWheelInput(
+                            controller: _secondsController,
+                            cs: cs,
+                            maxVal: 59,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'sec',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: cs.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Top/Bottom Fading Gradients
+                  IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            cs.surface,
+                            cs.surface.withOpacity(0.0),
+                            cs.surface.withOpacity(0.0),
+                            cs.surface,
+                          ],
+                          stops: const [0.0, 0.25, 0.75, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 36),
+            
+            // Action Buttons
             Row(
               children: [
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                     child: Text('Cancel', style: TextStyle(color: cs.onSurface.withOpacity(0.5), fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
@@ -397,10 +517,11 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
                       backgroundColor: cs.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 8,
+                      shadowColor: cs.primary.withOpacity(0.4),
                     ),
-                    child: const Text('Confirm', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text('Confirm', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                   ),
                 ),
               ],
@@ -410,39 +531,135 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
       ),
     );
   }
+}
 
-  Widget _buildTimeField({
-    required TextEditingController controller,
-    required String label,
-    required ColorScheme cs,
-  }) {
-    return Column(
+class _ScrollableWheelInput extends StatefulWidget {
+  final TextEditingController controller;
+  final ColorScheme cs;
+  final int maxVal;
+
+  const _ScrollableWheelInput({
+    required this.controller,
+    required this.cs,
+    required this.maxVal,
+  });
+
+  @override
+  State<_ScrollableWheelInput> createState() => _ScrollableWheelInputState();
+}
+
+class _ScrollableWheelInputState extends State<_ScrollableWheelInput> {
+  late FixedExtentScrollController _scrollController;
+  final FocusNode _focusNode = FocusNode();
+  bool _isEditing = false;
+  late final List<Widget> _wheelChildren;
+
+  @override
+  void initState() {
+    super.initState();
+    int initialVal = int.tryParse(widget.controller.text) ?? 0;
+    _scrollController = FixedExtentScrollController(initialItem: initialVal);
+    
+    _wheelChildren = List.generate(widget.maxVal + 1, (index) {
+      return Center(
+        child: Text(
+          index.toString().padLeft(2, '0'),
+          style: TextStyle(
+            fontSize: 44,
+            fontWeight: FontWeight.w900,
+            color: widget.cs.onSurface,
+            letterSpacing: -1.0,
+          ),
+        ),
+      );
+    });
+
+    _focusNode.addListener(() {
+      if (!mounted) return;
+      setState(() {
+        _isEditing = _focusNode.hasFocus;
+      });
+      if (!_focusNode.hasFocus) {
+        int val = int.tryParse(widget.controller.text) ?? 0;
+        if (val < 0) val = 0;
+        if (val > widget.maxVal) val = widget.maxVal;
+        widget.controller.text = val.toString().padLeft(2, '0');
+        if (_scrollController.hasClients) {
+          _scrollController.jumpToItem(val);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        SizedBox(
-          width: 70,
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: cs.onSurface),
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
-              filled: true,
-              fillColor: cs.outline.withOpacity(0.1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
+        // Wheel
+        Opacity(
+          opacity: _isEditing ? 0.0 : 1.0,
+          child: IgnorePointer(
+            ignoring: _isEditing,
+            child: GestureDetector(
+              onTap: () {
+                FocusScope.of(context).requestFocus(_focusNode);
+              },
+              child: ListWheelScrollView.useDelegate(
+                controller: _scrollController,
+                itemExtent: 56,
+                physics: const FixedExtentScrollPhysics(),
+                perspective: 0.005,
+                useMagnifier: true,
+                magnification: 1.15,
+                overAndUnderCenterOpacity: 0.3,
+                onSelectedItemChanged: (index) {
+                  if (_isEditing) return;
+                  final val = index % (widget.maxVal + 1);
+                  widget.controller.text = val.toString().padLeft(2, '0');
+                },
+                childDelegate: ListWheelChildLoopingListDelegate(
+                  children: _wheelChildren,
+                ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cs.onSurface.withOpacity(0.6)),
+        // Typing Field
+        IgnorePointer(
+          ignoring: !_isEditing,
+          child: Opacity(
+            opacity: _isEditing ? 1.0 : 0.0,
+            child: TextField(
+              controller: widget.controller,
+              focusNode: _focusNode,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 44,
+                fontWeight: FontWeight.w900,
+                color: widget.cs.onSurface,
+                letterSpacing: -1.0,
+              ),
+              cursorColor: widget.cs.primary,
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+              ),
+              showCursor: true,
+            ),
+          ),
         ),
       ],
     );
   }
 }
+

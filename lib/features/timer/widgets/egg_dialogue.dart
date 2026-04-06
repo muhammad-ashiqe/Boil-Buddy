@@ -33,8 +33,7 @@ class _EggDialogueWidgetState extends ConsumerState<EggDialogueWidget>
     'Cooking!'
   ];
   static const _pausedQuotes = [
-    'Taking a break?',
-    'Don\'t let me get cold!'
+    'It\'s paused.'
   ];
   static const _completeQuotes = [
     'I\'m ready!',

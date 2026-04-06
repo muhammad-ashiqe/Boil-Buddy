@@ -43,7 +43,6 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
     } else {
       await ref.read(themeProvider.notifier).setTheme(_pendingScheme);
     }
-    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -79,7 +78,7 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                         ),
                       ),
                       Text(
-                        'Tap to select · Done to apply',
+                        'Tap to select your live theme',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -124,11 +123,11 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                           scheme: preset,
                           isSelected: isSelected,
                           onTap: () {
-                            AudioService.instance.playClick();
                             setState(() {
                               _pendingScheme = preset;
                               _isCustom = false;
                             });
+                            _applyTheme();
                           },
                         );
                       },
@@ -147,31 +146,46 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                       accent: _customAccent,
                       activeScheme: activeScheme,
                       onTap: () {
-                        AudioService.instance.playPop();
                         setState(() => _isCustom = true);
+                        _applyTheme();
                       },
                       onPickPrimary: () => _showColorPicker(
                         context: context,
                         title: 'Pick Primary Color',
                         selected: _customPrimary,
-                        onPicked: (c) =>
-                            setState(() => _customPrimary = c),
+                        onPicked: (c) {
+                            setState(() {
+                                _customPrimary = c;
+                                _isCustom = true;
+                            });
+                            _applyTheme();
+                        },
                         activeScheme: activeScheme,
                       ),
                       onPickBackground: () => _showColorPicker(
                         context: context,
                         title: 'Pick Background Color',
                         selected: _customBackground,
-                        onPicked: (c) =>
-                            setState(() => _customBackground = c),
+                        onPicked: (c) {
+                            setState(() {
+                                _customBackground = c;
+                                _isCustom = true;
+                            });
+                            _applyTheme();
+                        },
                         activeScheme: activeScheme,
                       ),
                       onPickAccent: () => _showColorPicker(
                         context: context,
                         title: 'Pick Accent Color',
                         selected: _customAccent,
-                        onPicked: (c) =>
-                            setState(() => _customAccent = c),
+                        onPicked: (c) {
+                            setState(() {
+                                _customAccent = c;
+                                _isCustom = true;
+                            });
+                            _applyTheme();
+                        },
                         activeScheme: activeScheme,
                       ),
                     ),
@@ -179,80 +193,6 @@ class _ThemeScreenState extends ConsumerState<ThemeScreen> {
                     const SizedBox(height: 32),
                   ],
                 ),
-              ),
-            ),
-
-            // ── Bottom Buttons ────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              decoration: BoxDecoration(
-                color: activeScheme.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [
-                  BoxShadow(
-                    color: activeScheme.textDark.withOpacity(0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        AudioService.instance.playClick();
-                        Navigator.pop(context);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                            color: activeScheme.softBorder, width: 2),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: activeScheme.textMedium,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        AudioService.instance.playClick();
-                        _applyTheme();
-                      },
-                      icon: const Icon(Icons.check_rounded, size: 20),
-                      label: const Text(
-                        'Apply Theme',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 15),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isCustom
-                            ? _customPrimary
-                            : _pendingScheme.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: (_isCustom
-                                ? _customPrimary
-                                : _pendingScheme.primary)
-                            .withOpacity(0.4),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
@@ -491,23 +431,6 @@ class _CustomThemeCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? primary : activeScheme.primary,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Text(
-                      isSelected ? 'Selected ✓' : 'Select',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
                 ],
               ),
 
@@ -693,7 +616,6 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
                 final isChosen = _picked.value == c.value;
                 return GestureDetector(
                   onTap: () {
-                    AudioService.instance.playClick();
                     setState(() => _picked = c);
                   },
                   child: AnimatedContainer(
@@ -731,7 +653,6 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  AudioService.instance.playClick();
                   widget.onPicked(_picked);
                   Navigator.pop(context);
                 },
