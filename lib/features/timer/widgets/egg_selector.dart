@@ -276,10 +276,13 @@ class _CustomTimerSelector extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     isActive ? displayTime : 'Auto',
+                    maxLines: 1,
+                    overflow: TextOverflow.visible,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: isActive ? 9.5 : 10,
                       fontWeight: FontWeight.w800,
                       color: isActive ? Colors.white : cs.onSurface,
+                      letterSpacing: isActive ? -0.2 : 0,
                     ),
                   ),
                 ],
@@ -344,189 +347,230 @@ class _CustomTimerDialogState extends State<_CustomTimerDialog> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth.clamp(280.0, 420.0);
+    final isCompact = screenWidth < 360;
+    final outerPadding = isCompact ? 18.0 : 24.0;
+    final wheelAreaHeight = isCompact ? 136.0 : 148.0;
+    final highlightHeight = isCompact ? 48.0 : 52.0;
+    final digitFontSize = isCompact ? 34.0 : 38.0;
+    final colonFontSize = isCompact ? 24.0 : 28.0;
+    final itemExtent = isCompact ? 48.0 : 52.0;
+    final iconSize = isCompact ? 34.0 : 38.0;
+    final titleSize = isCompact ? 21.0 : 24.0;
+    final subtitleSize = isCompact ? 12.5 : 14.0;
+    final buttonVerticalPadding = isCompact ? 14.0 : 16.0;
+    final dialogRadius = isCompact ? 26.0 : 30.0;
+    final inputRadius = isCompact ? 20.0 : 24.0;
+    final highlightInset = isCompact ? 12.0 : 16.0;
+    final wheelGap = isCompact ? 8.0 : 12.0;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(dialogRadius),
+      ),
       backgroundColor: cs.surface,
       elevation: 24,
       shadowColor: Colors.black26,
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icon header
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cs.primary.withOpacity(0.12),
-                shape: BoxShape.circle,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: dialogWidth),
+        child: Padding(
+          padding: EdgeInsets.all(outerPadding),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(isCompact ? 12 : 14),
+                decoration: BoxDecoration(
+                  color: cs.primary.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.av_timer_rounded,
+                  size: iconSize,
+                  color: cs.primary,
+                ),
               ),
-              child: Icon(Icons.av_timer_rounded, size: 40, color: cs.primary),
-            ),
-            const SizedBox(height: 24),
-            
-            // Titles
-            Text(
-              'Custom Timer',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: cs.onSurface,
-                letterSpacing: -0.5,
+              SizedBox(height: isCompact ? 18 : 22),
+              Text(
+                'Custom Timer',
+                style: TextStyle(
+                  fontSize: titleSize,
+                  fontWeight: FontWeight.w900,
+                  color: cs.onSurface,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Swipe to set or tap to type',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface.withOpacity(0.5),
+              const SizedBox(height: 6),
+              Text(
+                'Swipe to set or tap to type',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: subtitleSize,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface.withOpacity(0.5),
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Unified Input Area
-            Container(
-              height: 160,
-              decoration: BoxDecoration(
-                color: cs.outline.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: cs.outline.withOpacity(0.1), width: 1.5),
+              SizedBox(height: isCompact ? 24 : 28),
+              Container(
+                height: wheelAreaHeight,
+                decoration: BoxDecoration(
+                  color: cs.outline.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(inputRadius),
+                  border: Border.all(
+                    color: cs.outline.withOpacity(0.1),
+                    width: 1.5,
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: highlightInset),
+                      child: Container(
+                        height: highlightHeight,
+                        decoration: BoxDecoration(
+                          color: cs.primary.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: SizedBox(
+                                    height: wheelAreaHeight,
+                                    child: _ScrollableWheelInput(
+                                      controller: _minutesController,
+                                      cs: cs,
+                                      maxVal: 59,
+                                      fontSize: digitFontSize,
+                                      itemExtent: itemExtent,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: wheelGap),
+                          Text(
+                            ':',
+                            style: TextStyle(
+                              fontSize: colonFontSize,
+                              fontWeight: FontWeight.w900,
+                              color: cs.primary.withOpacity(0.4),
+                              height: 1,
+                            ),
+                          ),
+                          SizedBox(width: wheelGap),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: SizedBox(
+                                    height: wheelAreaHeight,
+                                    child: _ScrollableWheelInput(
+                                      controller: _secondsController,
+                                      cs: cs,
+                                      maxVal: 59,
+                                      fontSize: digitFontSize,
+                                      itemExtent: itemExtent,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(inputRadius),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              cs.surface,
+                              cs.surface.withOpacity(0.0),
+                              cs.surface.withOpacity(0.0),
+                              cs.surface,
+                            ],
+                            stops: const [0.0, 0.25, 0.75, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Stack(
-                alignment: Alignment.center,
+              SizedBox(height: isCompact ? 24 : 30),
+              Row(
                 children: [
-                  // Center selection highlight
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: cs.primary.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(16),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          vertical: buttonVerticalPadding,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: cs.onSurface.withOpacity(0.5),
+                          fontSize: isCompact ? 15 : 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                  
-                  // Scroll Wheels and Labels
-                  Positioned.fill(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          height: 160,
-                          child: _ScrollableWheelInput(
-                            controller: _minutesController,
-                            cs: cs,
-                            maxVal: 59,
-                          ),
+                  SizedBox(width: isCompact ? 12 : 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'min',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: cs.primary,
-                          ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: buttonVerticalPadding,
                         ),
-                        const SizedBox(width: 14),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6.0),
-                          child: Text(
-                            ':',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              color: cs.primary.withOpacity(0.4),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        SizedBox(
-                          width: 80,
-                          height: 160,
-                          child: _ScrollableWheelInput(
-                            controller: _secondsController,
-                            cs: cs,
-                            maxVal: 59,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'sec',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: cs.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Top/Bottom Fading Gradients
-                  IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            cs.surface,
-                            cs.surface.withOpacity(0.0),
-                            cs.surface.withOpacity(0.0),
-                            cs.surface,
-                          ],
-                          stops: const [0.0, 0.25, 0.75, 1.0],
+                        elevation: 8,
+                        shadowColor: cs.primary.withOpacity(0.4),
+                      ),
+                      child: Text(
+                        'Confirm',
+                        style: TextStyle(
+                          fontSize: isCompact ? 16 : 18,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-            
-            const SizedBox(height: 36),
-            
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Text('Cancel', style: TextStyle(color: cs.onSurface.withOpacity(0.5), fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: cs.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 8,
-                      shadowColor: cs.primary.withOpacity(0.4),
-                    ),
-                    child: const Text('Confirm', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                  ),
-                ),
-              ],
-            )
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -537,11 +581,15 @@ class _ScrollableWheelInput extends StatefulWidget {
   final TextEditingController controller;
   final ColorScheme cs;
   final int maxVal;
+  final double fontSize;
+  final double itemExtent;
 
   const _ScrollableWheelInput({
     required this.controller,
     required this.cs,
     required this.maxVal,
+    required this.fontSize,
+    required this.itemExtent,
   });
 
   @override
@@ -565,7 +613,7 @@ class _ScrollableWheelInputState extends State<_ScrollableWheelInput> {
         child: Text(
           index.toString().padLeft(2, '0'),
           style: TextStyle(
-            fontSize: 44,
+            fontSize: widget.fontSize,
             fontWeight: FontWeight.w900,
             color: widget.cs.onSurface,
             letterSpacing: -1.0,
@@ -614,7 +662,7 @@ class _ScrollableWheelInputState extends State<_ScrollableWheelInput> {
               },
               child: ListWheelScrollView.useDelegate(
                 controller: _scrollController,
-                itemExtent: 56,
+                itemExtent: widget.itemExtent,
                 physics: const FixedExtentScrollPhysics(),
                 perspective: 0.005,
                 useMagnifier: true,
@@ -644,7 +692,7 @@ class _ScrollableWheelInputState extends State<_ScrollableWheelInput> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 44,
+                fontSize: widget.fontSize,
                 fontWeight: FontWeight.w900,
                 color: widget.cs.onSurface,
                 letterSpacing: -1.0,
@@ -655,6 +703,15 @@ class _ScrollableWheelInputState extends State<_ScrollableWheelInput> {
                 border: InputBorder.none,
               ),
               showCursor: true,
+              maxLength: 2,
+              buildCounter: (
+                BuildContext context, {
+                required int currentLength,
+                required bool isFocused,
+                required int? maxLength,
+              }) {
+                return null;
+              },
             ),
           ),
         ),
